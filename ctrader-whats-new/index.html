@@ -13,6 +13,13 @@
   .phone{ --fade:255,255,255; }
   .phone.t-dark{ --fade:28,28,30; }
   .phone.fs.t-dark{ --halo:rgb(28,28,30); }
+  .phone.fs.t-light{ --fade:244,244,246; --halo:rgb(244,244,246); background:#f4f4f6; }
+  .phone.fs.t-light .scrim{background:linear-gradient(180deg,rgba(244,244,246,.9),rgba(244,244,246,0))}
+  .phone.fs.t-light .seg{background:rgba(0,0,0,.12)}
+  .phone.fs.t-light .seg b{background:rgba(0,0,0,.7)}
+  .close{color:#fff}
+  .phone.fs.t-light .close{background:rgba(255,255,255,.6);color:#000}
+  .phone.fs.t-light .paused-badge{background:rgba(0,0,0,.6)}
 
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%;background:#2b2b2b;font-family:var(--font);overscroll-behavior:none}
@@ -90,7 +97,7 @@
   <div class="header">
     <div class="progress" id="progress"></div>
     <button class="close" id="close" aria-label="Close">
-      <svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
   </div>
   <div class="paused-badge" id="paused">Paused</div>
@@ -122,16 +129,16 @@
 <script>
 {
 const STORIES = [
-  { img:'img/1.jpg', fimg:'img/f1.jpg', cta:{en:'Open dashboard',de:'Dashboard öffnen'}, go:{en:'Opening account dashboard…',de:'Konto-Dashboard wird geöffnet…'},
+  { img:'img/1.jpg', fimg:'img/f1.jpg', limg:'img/l1.jpg', cta:{en:'Open dashboard',de:'Dashboard öffnen'}, go:{en:'Opening account dashboard…',de:'Konto-Dashboard wird geöffnet…'},
     en:['Account equity chart','Track your performance over time with the equity chart in your account dashboard for quick insights.'],
     de:['Kontokapital-Diagramm','Verfolgen Sie Ihre Performance im Zeitverlauf mit dem Kapitaldiagramm im Konto-Dashboard und erhalten Sie schnelle Einblicke in die Entwicklung Ihres Kontos.'] },
-  { img:'img/2.jpg', fimg:'img/f2.jpg', cta:{en:'Show on chart',de:'Im Chart zeigen'}, go:{en:'Opening chart…',de:'Chart wird geöffnet…'},
+  { img:'img/2.jpg', fimg:'img/f2.jpg', limg:'img/l2.jpg', cta:{en:'Show on chart',de:'Im Chart zeigen'}, go:{en:'Opening chart…',de:'Chart wird geöffnet…'},
     en:['Candle countdown','Monitor the candle countdown on a chart to see how much time is left before the current candle closes for the selected period.'],
     de:['Countdown bis zum Kerzenschluss','Behalten Sie den Kerzen-Countdown im Chart im Blick und sehen Sie, wie viel Zeit noch bleibt, bevor die aktuelle Kerze für den ausgewählten Zeitraum schließt.'] },
-  { img:'img/3.jpg', fimg:'img/f3.jpg', cta:null,
+  { img:'img/3.jpg', fimg:'img/f3.jpg', limg:'img/l3.jpg', cta:null,
     en:['Spacious landscape view','Enjoy a larger chart view with the new landscape layout for more convenient trading and improved space efficiency.'],
     de:['Großzügige Querformat-Ansicht','Genießen Sie eine größere Chartansicht mit dem neuen Querformat-Layout für bequemeres Trading und eine bessere Nutzung des verfügbaren Platzes auf dem Bildschirm.'] },
-  { img:'img/4.jpg', fimg:'img/f4.jpg', cta:null,
+  { img:'img/4.jpg', fimg:'img/f4.jpg', limg:'img/l4.jpg', cta:null,
     en:['Lighter charts','Explore cleaner charts, now visible behind the transparent price axis and free of axis separators.'],
     de:['Leichtere Charts','Entdecken Sie übersichtlichere Charts, die jetzt hinter der transparenten Preisachse sichtbar und frei von Achsentrennlinien sind.'] },
 ];
@@ -143,7 +150,7 @@ const S={btn:true, layout:'panel', theme:'light', lang:'en'};
 try{ Object.assign(S, JSON.parse(localStorage.getItem('wn-proto')||'{}')); }catch(e){}
 let idx=0, elapsed=0, last=0, expanded=false, holding=false, closed=true;
 
-STORIES.forEach(s=>{[s.img,s.fimg].forEach(u=>{const i=new Image(); i.src=u;});});
+STORIES.forEach(s=>{[s.img,s.fimg,s.limg].forEach(u=>{const i=new Image(); i.src=u;});});
 prog.innerHTML=STORIES.map(()=>'<div class="seg"><b></b></div>').join('');
 const segs=[...prog.children];
 
@@ -159,9 +166,10 @@ function maxPanelH(){ const top=$('close').getBoundingClientRect().bottom - phon
 function contentH(){ return 28 + titleEl.offsetHeight + 12 + bodyEl.offsetHeight + 32 + (cta.hidden?0:64) + 46; }
 function textFits(){ const avail=panelBaseH()-28-(cta.hidden?46:(64+46+8)); return (titleEl.offsetHeight+12+bodyEl.offsetHeight)<=avail; }
 
+function artFor(s){ return S.layout==='fs' ? (S.theme==='light'?s.limg:s.fimg) : s.img; }
 function render(){
   const s=STORIES[idx], L=S.lang, isLast=idx===STORIES.length-1;
-  art.style.backgroundImage=`url(${S.layout==='fs'?s.fimg:s.img})`;
+  art.style.backgroundImage=`url(${artFor(s)})`;
   titleEl.textContent=s[L][0]; bodyEl.textContent=s[L][1];
   cta.hidden=!S.btn;
   cta.textContent = isLast ? DONE[L] : NEXT[L];
@@ -223,7 +231,7 @@ document.addEventListener('visibilitychange',()=>{ last=0; });
 window.addEventListener('resize',()=>{ if(closed) return; panel.classList.toggle('overflow',!textFits()); if(expanded) panel.style.height=Math.min(contentH(),maxPanelH())+'px'; });
 window.addEventListener('keydown',e=>{ if(closed) return; if(e.key==='ArrowRight')next(); if(e.key==='ArrowLeft')prev(); if(e.key==='Escape')closeStories(); });
 
-syncSetup(); art.style.backgroundImage=`url(${S.layout==='fs'?STORIES[0].fimg:STORIES[0].img})`;
+syncSetup(); art.style.backgroundImage=`url(${artFor(STORIES[0])})`;
 }
 </script>
 </body>

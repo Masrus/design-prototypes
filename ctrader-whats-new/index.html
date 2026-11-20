@@ -20,7 +20,7 @@
   @media (min-width:600px){ .phone{width:393px;height:min(852px,100dvh);border-radius:48px;box-shadow:0 30px 80px rgba(0,0,0,.5)} }
 
   .art{position:absolute;left:0;right:0;top:0;bottom:calc(var(--panelH) - 16px);background:#121214 center/cover no-repeat}
-  .phone.fs .art{bottom:0;background-size:100% auto;background-position:top center;background-color:var(--grad)}
+  .phone.fs .art{bottom:0;background-size:cover;background-position:center top}
   .scrim{position:absolute;left:0;right:0;top:0;height:160px;background:linear-gradient(180deg,rgba(18,18,20,.9),rgba(18,18,20,0));pointer-events:none}
 
   .header{position:absolute;left:0;right:0;top:env(safe-area-inset-top,0);height:64px;pointer-events:none;z-index:5}
@@ -117,16 +117,16 @@
 <script>
 {
 const STORIES = [
-  { img:'img/1.jpg', cta:{en:'Open dashboard',de:'Dashboard öffnen'}, go:{en:'Opening account dashboard…',de:'Konto-Dashboard wird geöffnet…'},
+  { img:'img/1.jpg', fimg:'img/f1.jpg', cta:{en:'Open dashboard',de:'Dashboard öffnen'}, go:{en:'Opening account dashboard…',de:'Konto-Dashboard wird geöffnet…'},
     en:['Account equity chart','Track your performance over time with the equity chart in your account dashboard for quick insights.'],
     de:['Kontokapital-Diagramm','Verfolgen Sie Ihre Performance im Zeitverlauf mit dem Kapitaldiagramm im Konto-Dashboard und erhalten Sie schnelle Einblicke in die Entwicklung Ihres Kontos.'] },
-  { img:'img/2.jpg', cta:{en:'Show on chart',de:'Im Chart zeigen'}, go:{en:'Opening chart…',de:'Chart wird geöffnet…'},
+  { img:'img/2.jpg', fimg:'img/f2.jpg', cta:{en:'Show on chart',de:'Im Chart zeigen'}, go:{en:'Opening chart…',de:'Chart wird geöffnet…'},
     en:['Candle countdown','Monitor the candle countdown on a chart to see how much time is left before the current candle closes for the selected period.'],
     de:['Countdown bis zum Kerzenschluss','Behalten Sie den Kerzen-Countdown im Chart im Blick und sehen Sie, wie viel Zeit noch bleibt, bevor die aktuelle Kerze für den ausgewählten Zeitraum schließt.'] },
-  { img:'img/3.jpg', cta:null,
+  { img:'img/3.jpg', fimg:'img/f3.jpg', cta:null,
     en:['Spacious landscape view','Enjoy a larger chart view with the new landscape layout for more convenient trading and improved space efficiency.'],
     de:['Großzügige Querformat-Ansicht','Genießen Sie eine größere Chartansicht mit dem neuen Querformat-Layout für bequemeres Trading und eine bessere Nutzung des verfügbaren Platzes auf dem Bildschirm.'] },
-  { img:'img/4.jpg', cta:null,
+  { img:'img/4.jpg', fimg:'img/f4.jpg', cta:null,
     en:['Lighter charts','Explore cleaner charts, now visible behind the transparent price axis and free of axis separators.'],
     de:['Leichtere Charts','Entdecken Sie übersichtlichere Charts, die jetzt hinter der transparenten Preisachse sichtbar und frei von Achsentrennlinien sind.'] },
 ];
@@ -138,7 +138,7 @@ const S={btn:true, layout:'panel', theme:'light', lang:'en'};
 try{ Object.assign(S, JSON.parse(localStorage.getItem('wn-proto')||'{}')); }catch(e){}
 let idx=0, elapsed=0, last=0, expanded=false, holding=false, closed=true;
 
-STORIES.forEach(s=>{const i=new Image(); i.src=s.img;});
+STORIES.forEach(s=>{[s.img,s.fimg].forEach(u=>{const i=new Image(); i.src=u;});});
 prog.innerHTML=STORIES.map(()=>'<div class="seg"><b></b></div>').join('');
 const segs=[...prog.children];
 
@@ -156,10 +156,10 @@ function textFits(){ const avail=panelBaseH()-28-(cta.hidden?46:(64+46+8)); retu
 
 function render(){
   const s=STORIES[idx], L=S.lang, isLast=idx===STORIES.length-1;
-  art.style.backgroundImage=`url(${s.img})`;
+  art.style.backgroundImage=`url(${S.layout==='fs'?s.fimg:s.img})`;
   titleEl.textContent=s[L][0]; bodyEl.textContent=s[L][1];
   cta.hidden=!S.btn;
-  cta.textContent = s.cta ? s.cta[L] : (isLast ? DONE[L] : NEXT[L]);
+  cta.textContent = isLast ? DONE[L] : NEXT[L];
   collapse(true);
   panel.classList.toggle('overflow', !textFits());
   segs.forEach((g,i)=>{ g.firstChild.style.width = i<idx?'100%':'0'; });
@@ -209,8 +209,7 @@ requestAnimationFrame(tick);
     else if(Math.abs(dy)<8&&onText&&!expanded) expand();
     else expanded?panel.style.height=Math.min(contentH(),maxPanelH())+'px':collapse(); });
 }
-cta.addEventListener('click',e=>{ e.stopPropagation(); const s=STORIES[idx];
-  if(s.cta){ closeStories(s.go[S.lang]); toast(s.go[S.lang]); } else next(); });
+cta.addEventListener('click',e=>{ e.stopPropagation(); next(); });
 $('close').addEventListener('click',()=>closeStories('Closed with the close button.'));
 $('start').addEventListener('click',openStories);
 $('optBtn').addEventListener('change',e=>{ S.btn=e.target.checked; save(); });
@@ -219,7 +218,7 @@ document.addEventListener('visibilitychange',()=>{ last=0; });
 window.addEventListener('resize',()=>{ if(closed) return; panel.classList.toggle('overflow',!textFits()); if(expanded) panel.style.height=Math.min(contentH(),maxPanelH())+'px'; });
 window.addEventListener('keydown',e=>{ if(closed) return; if(e.key==='ArrowRight')next(); if(e.key==='ArrowLeft')prev(); if(e.key==='Escape')closeStories(); });
 
-syncSetup(); art.style.backgroundImage=`url(${STORIES[0].img})`;
+syncSetup(); art.style.backgroundImage=`url(${S.layout==='fs'?STORIES[0].fimg:STORIES[0].img})`;
 }
 </script>
 </body>
